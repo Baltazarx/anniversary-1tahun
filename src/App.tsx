@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 // Data placeholder
+const BASE = import.meta.env.BASE_URL;
 const photos = [
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9',
-  'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
-  'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
-  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
-  'https://images.unsplash.com/photo-1511988617509-a57c8a288659',
-];
+  'photos/01.jpg',
+  'photos/02.jpg',
+  'photos/03.jpg',
+  'photos/04.jpg',
+].map((p) => BASE + p);
 
 const softRed = '#FFC1C1';
 const deepRose = '#b3002d';
@@ -159,10 +159,10 @@ function Hero() {
   return (
     <section id="home" className="hero">
       <div className="hero-content">
-        <div className="badge">Soft Red Edition</div>
+        <div className="badge">For my beautiful girlfriend</div>
         <h1>Selamat Ulang Tahun ke-21, Pasya Wahyu Permata Ningsih</h1>
         <p className="subtitle">30 Oktober 2004 — 30 Oktober 2025</p>
-        <p className="intro">Untuk perempuan tercantik dalam hidupku. Semoga setiap langkahmu mewah oleh cinta, doa, dan keajaiban yang menghampiri tanpa henti.</p>
+        <p className="intro">Untuk perempuan tercantik dalam hidupku. Semoga apa yang kamu inginkan selalu tercapai, doa, dan keajaiban yang menghampiri tanpa henti.</p>
         <div className="cta-row">
           <a href="#gallery" className="btn primary">Lihat Kenangan</a>
           <a href="#story" className="btn ghost">Baca Pesan</a>
@@ -201,14 +201,13 @@ function Story() {
   return (
     <section id="story" className="story">
       <div className="card">
-        <h3>Untuk Kamu</h3>
+        <h3>Dear My Love</h3>
         <p>
-          Di usia ke-21, semoga hatimu selalu hangat, langkahmu ringan, 
-          dan mimpimu tumbuh jadi kenyataan satu per satu. Terima kasih 
-          sudah menjadi rumah terindah bagi hatiku.
+          Di usia ke-21, Semoga kamu makin diberi kesabaran seluas samudra seperti nama terakhirku, Dilancarkan studi S1 nya tanpa aku (untuk semester ini), 
+          & mimpimu tumbuh jadi kenyataan satu per satu. Terima kasih sudah menjadi rumah terindah dan ternyaman bagiku.
         </p>
         <blockquote>
-          "Aku mencintaimu — hari ini, esok, dan selamanya."
+          "I love you — today, tomorrow, and forever."
         </blockquote>
       </div>
       <div className="stats">
@@ -236,6 +235,7 @@ function Promises() {
     { title: 'Merayakan Hal Kecil', desc: 'Menjadikan momen sederhana terasa mewah dengan tawa dan syukur.' },
     { title: 'Jujur & Saling Percaya', desc: 'Kejujuran jadi bahasa kita, percaya jadi rumahnya.' },
     { title: 'Mencintai Setiap Versimu', desc: 'Bahagia, lelah, rapuh—semuanya berharga untuk kupeluk.' },
+    { title: 'Selalu diberi kekuatan dan keberuntungan', desc: 'Ketika ada yang jadi api harus ada yang menjadi air.' },
   ];
   return (
     <section id="promises" className="promises">
@@ -379,7 +379,7 @@ function Footer() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <div>Made with love • Soft Red • 30 Oktober 2025</div>
+        <div>Made with love • Ajusta • 30 Oktober 2025</div>
         <div className="small">© Untuk kamu yang paling berharga.</div>
       </div>
     </footer>

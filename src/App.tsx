@@ -181,7 +181,7 @@ function Hero() {
     <section id="home" className="hero">
       <div className="hero-content">
         <div className="badge">For my beautiful girlfriend</div>
-        <h1>Selamat Ulang Tahun ke-21, <br /> Pasya Wahyu Permata Ningsih</h1>
+        <h1>Happy birthday, <br /> Pasya Wahyu Permata Ningsih</h1>
         <p className="subtitle">30 Oktober 2004 — 30 Oktober 2025</p>
         <p className="intro">Untuk perempuan tercantik dalam hidupku. Semoga apa yang kamu inginkan selalu tercapai, doa, dan keajaiban yang menghampiri tanpa henti.</p>
         <div className="cta-row">

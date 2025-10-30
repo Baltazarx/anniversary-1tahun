@@ -6,7 +6,7 @@ export default defineConfig({
   base: '/anniversary-1tahun/',
   plugins: [react()],
   build: {
-    outDir: 'docs',
+    outDir: 'dist',
     assetsDir: 'assets',
   }
 })

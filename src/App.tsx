@@ -1,283 +1,389 @@
-import React, { useState, useEffect } from 'react'
-import './App.css'
+import React, { useEffect, useRef, useState } from 'react';
 
-interface Memory {
-  id: number
-  date: string
-  title: string
-  description: string
-  image: string
+// Data placeholder
+const photos = [
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9',
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb',
+  'https://images.unsplash.com/photo-1465101046530-73398c7f28ca',
+  'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
+  'https://images.unsplash.com/photo-1511988617509-a57c8a288659',
+];
+
+const softRed = '#FFC1C1';
+const deepRose = '#b3002d';
+
+// === Quiz Gate ===
+type Quiz = {
+  question: string;
+  options: string[];
+  answerIndex: number;
+};
+
+const QUIZZES: Quiz[] = [
+  { question: 'Kamu sayang aku ngga?', options: ['Sayang', 'Sayang aja', 'Sayang bangey', 'Sayang buangett'], answerIndex: 3 },
+  { question: 'Kalau sayang aku, tanggal berapa aku lahir?', options: ['29', '27', '26', '25'], answerIndex: 0 },
+  { question: 'Aku umur berapa tahun ini', options: ['20', '21', '22', '23'], answerIndex: 3 },
+  { question: 'Apa makanan favorit aku?', options: ['Bakso', 'Sate', 'Geprek', 'Mie ayam'], answerIndex: 2 },
+  { question: 'Hero ML andalanku apa?', options: ['Kadita', 'Harley', 'Franco', 'Hayabusa'], answerIndex: 0 },
+];
+
+function pickThreeRandom<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, 3);
 }
 
-const App: React.FC = () => {
-  const [currentMemory, setCurrentMemory] = useState(0)
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  })
+function QuizGate({ onPassed }: { onPassed: () => void }) {
+  const [selectedSet] = useState<Quiz[]>(() => pickThreeRandom(QUIZZES));
+  const [step, setStep] = useState(0);
+  const [wrong, setWrong] = useState<string | null>(null);
+  const [showIntro, setShowIntro] = useState(true);
 
-  // Tanggal ulang tahun pacar kamu: 30 Oktober 2004
-  const thisYear = new Date().getFullYear()
-  const birthdayThisYear = new Date(thisYear, 9, 30) // Oktober = 9 (0-11), tanggal 30
-  const currentDate = new Date()
-  
-  // Tentukan tanggal ulang tahun berikutnya
-  let nextBirthday = new Date(birthdayThisYear)
-  if (birthdayThisYear < currentDate) {
-    nextBirthday.setFullYear(thisYear + 1)
-  }
+  const current = selectedSet[step];
 
-  // Calculate age - Pacar kamu lahir tahun 2004
-  const birthYear = 2004
-  let age = thisYear - birthYear
-  if (birthdayThisYear > currentDate) {
-    age = age - 1 // Jika belum ulang tahun tahun ini, kurangi 1
-  }
-
-  // Check if today is birthday
-  const isTodayBirthday = 
-    birthdayThisYear.getMonth() === currentDate.getMonth() &&
-    birthdayThisYear.getDate() === currentDate.getDate()
-
-  // Memories data - kenangan-kenangan indah kalian
-  const memories: Memory[] = [
-    {
-      id: 1,
-      date: '30 Oktober 2023',
-      title: 'Ulang Tahun ke-19',
-      description: 'Ulang tahun pertamamu yang kita rayakan bersama. Saat itu kamu masih 19 tahun dan aku sudah tahu bahwa kamu adalah orang yang tepat untukku.',
-      image: 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=500&h=300&fit=crop'
-    },
-    {
-      id: 2,
-      date: 'Desember 2023',
-      title: 'Momen Liburan Akhir Tahun',
-      description: 'Liburan akhir tahun kita bersama. Kamu yang masih 19 tahun tapi sudah begitu dewasa dan penuh perhatian. Aku semakin yakin bahwa kamu adalah jodohku.',
-      image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&h=300&fit=crop'
-    },
-    {
-      id: 3,
-      date: 'Valentine 2024',
-      title: 'Valentine Pertama Bersama',
-      description: 'Valentine pertama kita saat kamu sudah hampir 20 tahun. Momen dimana aku tahu bahwa cintaku padamu semakin dalam dan aku ingin menghabiskan sisa hidupku bersamamu.',
-      image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=500&h=300&fit=crop'
-    },
-    {
-      id: 4,
-      date: 'Musim Semi 2024',
-      title: 'Momen Spesial Bersamamu',
-      description: 'Setiap momen bersamamu adalah kenangan yang paling berharga. Kamu yang baru berusia 20 tahun tapi sudah membuat hidupku penuh warna dan kebahagiaan.',
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=500&h=300&fit=crop'
-    },
-    {
-      id: 5,
-      date: 'Musim Panas 2024',
-      title: 'Petualangan Kita',
-      description: 'Petualangan-petualangan kecil kita yang penuh tawa. Kamu yang masih muda tapi sudah begitu bijak dan penuh cinta. Aku bersyukur bisa mengenalmu.',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=300&fit=crop'
-    }
-  ]
-
-  // Countdown timer ke ulang tahun
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date().getTime()
-      const distance = nextBirthday.getTime() - now
-
-      if (distance > 0) {
-        setTimeLeft({
-          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((distance % (1000 * 60)) / 1000)
-        })
+  const handleChoose = (idx: number) => {
+    if (idx === current.answerIndex) {
+      setWrong(null);
+      if (step === selectedSet.length - 1) {
+        onPassed();
       } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+        setStep((s) => s + 1);
       }
-    }, 1000)
+    } else {
+      const funTexts = [
+        'Eits… salah nih, sepertinya kamu butuh pelukan motivasi 😁',
+        'Belum tepat, tapi kamu tetap yang paling manis ✨',
+        'Salah dikit gapapa, coba lagi yuk! 💕',
+      ];
+      setWrong(funTexts[Math.floor(Math.random() * funTexts.length)]);
+    }
+  };
 
-    return () => clearInterval(timer)
-  }, [nextBirthday])
+  const resetWrong = () => setWrong(null);
 
-  // Auto-rotate memories
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMemory((prev) => (prev + 1) % memories.length)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [memories.length])
-
-  const nextMemory = () => {
-    setCurrentMemory((prev) => (prev + 1) % memories.length)
-  }
-
-  const prevMemory = () => {
-    setCurrentMemory((prev) => (prev - 1 + memories.length) % memories.length)
+  if (showIntro) {
+    return (
+      <div className="quiz-wrap">
+        <div className="quiz-intro">
+          <div className="intro-badge">Peringatan Manis</div>
+          <h2>Haii Sayangkuu🫶</h2>
+          <p className="intro-text">
+            Sebelum kamu membuka website ini, ada beberapa pertanyaan yang harus kamu jawab dulu nih.
+            Gampang gampang kok jawabannya, ga susah kaya UAS Tecnopreneur wkwkwk. kalo Salah? Tenang, ada tombol coba lagi kok.
+          </p>
+          <ul className="intro-list">
+            <li>3 pertanyaan aja ga banyak kok</li>
+            <li>Kalau benar semua → langsung masuk ke website</li>
+            <li>Kalau salah → muncul pesan lucu + bisa coba lagi</li>
+          </ul>
+          <button className="intro-start" onClick={() => setShowIntro(false)}>Siap, Mulai!</button>
+        </div>
+        <style>{`
+          .quiz-intro { width: 100%; max-width: 720px; background: rgba(255,245,247,.86); border: 1px solid #ffe3eb; border-radius: 24px; padding: 28px 22px; text-align: center; box-shadow: 0 26px 90px rgba(255, 179, 194, .35); }
+          .intro-badge { display: inline-block; font-weight: 700; font-size: 12px; color: ${deepRose}; background: #fff; border: 1px solid #ffd6de; border-radius: 999px; padding: 6px 12px; }
+          .quiz-intro h2 { margin: 12px 0 10px; color: ${deepRose}; font-family: 'Playfair Display', serif; }
+          .intro-text { color: #7b2333; margin: 0 auto 10px; max-width: 540px; }
+          .intro-list { list-style: none; padding: 0; margin: 8px 0 16px; color: #6b2232; }
+          .intro-list li { margin: 6px 0; }
+          .intro-start { border-radius: 12px; padding: 12px 16px; background: linear-gradient(135deg, #ff9db2, #ff8ba7); color: #fff; border: 1px solid #ff9db2; font-weight: 700; cursor: pointer; }
+          .quiz-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 20px; background: radial-gradient(1200px 600px at 20% -10%, #ffe8ef 0%, transparent 60%), radial-gradient(1000px 500px at 100% 0%, #ffeef3 0%, transparent 55%), linear-gradient(180deg, #fff, #fff0f5 60%, #fff); }
+        `}</style>
+      </div>
+    );
   }
 
   return (
-    <div className="app">
-      {/* Header */}
-      <header className="header">
-        <div className="hearts">
-          <span className="heart">🎂</span>
-          <span className="heart">🎉</span>
-          <span className="heart">🎈</span>
-          <span className="heart">🎁</span>
-          <span className="heart">✨</span>
-        </div>
-        <h1 className="title">Happy 20th Birthday!</h1>
-        <p className="subtitle">Selamat Ulang Tahun yang ke-{age} Tahun!</p>
-        <p className="special-message">🎉 Welcome to your 20Th! 🎉</p>
-      </header>
-
-      {/* Countdown Timer */}
-      <section className="countdown-section">
-        {isTodayBirthday ? (
-          <>
-            <h2 style={{fontSize: '2.5rem', marginBottom: '20px'}}>🎉 HARI INI ADALAH ULANG TAHUNMU! 🎉</h2>
-            <p style={{fontSize: '1.5rem', color: 'white', marginBottom: '20px'}}>
-              Selamat ulang tahun yang ke-{age} tahun! Hari ini adalah hari spesialmu! 🎂✨
-            </p>
-            <div className="countdown">
-              <div className="time-unit">
-                <span className="number">{timeLeft.hours}</span>
-                <span className="label">Jam</span>
-              </div>
-              <div className="time-unit">
-                <span className="number">{timeLeft.minutes}</span>
-                <span className="label">Menit</span>
-              </div>
-              <div className="time-unit">
-                <span className="number">{timeLeft.seconds}</span>
-                <span className="label">Detik</span>
-              </div>
-            </div>
-            <p style={{fontSize: '1.2rem', color: 'rgba(255, 255, 255, 0.9)', marginTop: '20px'}}>
-              Nikmati setiap momen spesial hari ini! 💕
-            </p>
-          </>
-        ) : (
-          <>
-            <h2>Menuju Ulang Tahunmu</h2>
-            <div className="countdown">
-              <div className="time-unit">
-                <span className="number">{timeLeft.days}</span>
-                <span className="label">Hari</span>
-              </div>
-              <div className="time-unit">
-                <span className="number">{timeLeft.hours}</span>
-                <span className="label">Jam</span>
-              </div>
-              <div className="time-unit">
-                <span className="number">{timeLeft.minutes}</span>
-                <span className="label">Menit</span>
-              </div>
-              <div className="time-unit">
-                <span className="number">{timeLeft.seconds}</span>
-                <span className="label">Detik</span>
-              </div>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Love Quote */}
-      <section className="quote-section">
-        <blockquote className="love-quote">
-          "Selamat ulang tahun yang ke-{age} tahun, sayangku! Di usia 20 tahun ini, kamu sudah menjadi wanita yang begitu istimewa. 
-          Aku bangga melihatmu tumbuh menjadi pribadi yang penuh cinta, bijak, dan penuh perhatian. 
-          Semoga di usia yang baru ini, semua impianmu terwujud dan kebahagiaan selalu menyertaimu. Aku akan selalu ada untuk mendukungmu! 💕"
-        </blockquote>
-      </section>
-
-      {/* Memories Gallery */}
-      <section className="memories-section">
-        <h2>Kenangan Indah Bersamamu</h2>
-        <div className="memory-container">
-          <button className="nav-btn prev" onClick={prevMemory}>‹</button>
-          <div className="memory-card">
-            <div className="memory-image">
-              <img src={memories[currentMemory].image} alt={memories[currentMemory].title} />
-            </div>
-            <div className="memory-content">
-              <h3>{memories[currentMemory].title}</h3>
-              <p className="memory-date">{memories[currentMemory].date}</p>
-              <p className="memory-description">{memories[currentMemory].description}</p>
-            </div>
-          </div>
-          <button className="nav-btn next" onClick={nextMemory}>›</button>
-        </div>
-        <div className="memory-dots">
-          {memories.map((_, index) => (
-            <button
-              key={index}
-              className={`dot ${index === currentMemory ? 'active' : ''}`}
-              onClick={() => setCurrentMemory(index)}
-            />
+    <div className="quiz-wrap">
+      <div className="quiz-card">
+        <div className="quiz-badge">Check-in Manis {step + 1}/3</div>
+        <h2 className="quiz-q">{current.question}</h2>
+        <div className="quiz-options">
+          {current.options.map((opt, i) => (
+            <button key={i} className="quiz-btn" onClick={() => handleChoose(i)}>{opt}</button>
           ))}
         </div>
-      </section>
-
-      {/* Love Letter */}
-      <section className="love-letter-section">
-        <h2>Ucapan Ulang Tahun untuk Kamu</h2>
-        <div className="love-letter">
-          <p>
-            Sayangku yang tercinta,
-          </p>
-          <p>
-            Selamat ulang tahun yang ke-{age} tahun! Hari ini, 30 Oktober, adalah hari yang sangat spesial 
-            karena 20 tahun yang lalu, dunia mendapat hadiah terindah - yaitu kamu. Di hari spesialmu ini, 
-            aku ingin mengucapkan terima kasih sudah menjadi bagian terpenting dalam hidupku.
-          </p>
-          <p>
-            Kamu yang baru berusia 20 tahun tapi sudah begitu dewasa, bijak, dan penuh cinta. Setiap hari 
-            bersamamu adalah hadiah terindah yang pernah aku terima. Senyummu yang manis, tawamu yang 
-            menular, dan kepedulianmu yang tulus membuatku jatuh cinta lebih dalam setiap harinya.
-          </p>
-          <p>
-            Di usia 20 tahun ini, kamu sudah membuktikan bahwa usia hanyalah angka. Kamu sudah menjadi 
-            wanita yang mandiri, penuh perhatian, dan selalu membuat orang di sekitarmu merasa bahagia. 
-            Aku bangga melihatmu tumbuh menjadi pribadi yang begitu istimewa.
-          </p>
-          <p>
-            Semoga di usia yang baru ini, semua impianmu terwujud, semoga kebahagiaan selalu menyertaimu, 
-            dan semoga kamu selalu sehat dan bahagia. Aku berjanji akan selalu ada untuk mendukungmu 
-            dalam setiap langkah, dalam setiap impian, dan dalam setiap momen hidupmu.
-          </p>
-          <p>
-            Terima kasih sudah mengajariku arti cinta sejati, arti kebahagiaan sederhana, dan arti hidup 
-            yang sesungguhnya. Kamu adalah inspirasi terbesar dalam hidupku.
-          </p>
-          <p>
-            Sekali lagi, selamat ulang tahun yang ke-{age} tahun, sayang! Semoga hari ini menjadi hari 
-            yang penuh dengan kebahagiaan, canda tawa, dan cinta. Nikmati setiap momen spesial hari ini 
-            dan ingat bahwa kamu sangat dicintai.
-          </p>
-          <p>
-            Aku tidak bisa membayangkan hidupku tanpa kamu. Kamu adalah segalanya bagiku, sekarang dan 
-            selamanya.
-          </p>
-          <p className="signature">
-            Selamat ulang tahun yang ke-{age} tahun, sayang! 🎂🎉🎈<br />
-            <strong>Dari pacarmu yang sangat mencintaimu</strong><br />
-            <span style={{fontSize: '1.2rem'}}>💕 Happy 20th Birthday! 💕</span><br />
-            <span style={{fontSize: '0.9rem', color: '#666'}}>30 Oktober 2004 - 30 Oktober 2024</span>
-          </p>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <p>Made with 💕 for the most amazing person in the world</p>
-        <p>© 2024 - Birthday Website</p>
-      </footer>
+        {wrong && (
+          <div className="quiz-wrong">
+            <div className="text">{wrong}</div>
+            <button className="retry" onClick={resetWrong}>Coba Lagi</button>
+          </div>
+        )}
+      </div>
+      <style>{`
+        .quiz-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 20px; background: radial-gradient(1200px 600px at 20% -10%, #ffe8ef 0%, transparent 60%), radial-gradient(1000px 500px at 100% 0%, #ffeef3 0%, transparent 55%), linear-gradient(180deg, #fff, #fff0f5 60%, #fff); }
+        .quiz-card { width: 100%; max-width: 640px; background: rgba(255,245,247,.78); border: 1px solid #ffe3eb; border-radius: 24px; padding: 28px 22px; text-align: center; box-shadow: 0 26px 90px rgba(255, 179, 194, .35); }
+        .quiz-badge { display: inline-block; font-weight: 700; font-size: 12px; color: ${deepRose}; background: #fff; border: 1px solid #ffd6de; border-radius: 999px; padding: 6px 12px; }
+        .quiz-q { margin: 14px 0 16px; color: ${deepRose}; font-family: 'Playfair Display', serif; }
+        .quiz-options { display: grid; grid-template-columns: 1fr; gap: 10px; max-width: 440px; margin: 0 auto; }
+        .quiz-btn { border-radius: 12px; padding: 12px 14px; background: #fff; border: 1px solid #ffd6de; color: #7b2333; font-weight: 700; cursor: pointer; transition: transform .2s, box-shadow .2s, background .2s; }
+        .quiz-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 34px rgba(255, 179, 194, .28); background: #fff7fa; }
+        .quiz-wrong { margin-top: 14px; background: #fff; border: 1px solid #ffe3eb; border-radius: 14px; padding: 12px; color: #7b2333; }
+        .quiz-wrong .text { margin-bottom: 8px; }
+        .quiz-wrong .retry { border-radius: 10px; padding: 8px 12px; background: linear-gradient(135deg, #ff9db2, #ff8ba7); color: #fff; border: 1px solid #ff9db2; font-weight: 700; cursor: pointer; }
+        @media (min-width: 560px) { .quiz-options { grid-template-columns: 1fr 1fr; } }
+      `}</style>
     </div>
-  )
+  );
 }
 
-export default App
+function useAutoSlide(length: number, delayMs: number) {
+  const [index, setIndex] = useState(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    timer.current = setTimeout(() => setIndex((i) => (i + 1) % length), delayMs);
+    return () => { if (timer.current) clearTimeout(timer.current); };
+  }, [index, length, delayMs]);
+  return index;
+}
+
+function Navbar() {
+  return (
+    <nav className="nav">
+      <div className="nav-inner">
+        <div className="brand">Pasya • 21st Birthday</div>
+        <div className="links">
+          <a href="#home">Home</a>
+          <a href="#gallery">Gallery</a>
+          <a href="#story">Our Story</a>
+          <a href="#promises">Harapan & Janji</a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function Hero() {
+  return (
+    <section id="home" className="hero">
+      <div className="hero-content">
+        <div className="badge">Soft Red Edition</div>
+        <h1>Selamat Ulang Tahun ke-21, Pasya Wahyu Permata Ningsih</h1>
+        <p className="subtitle">30 Oktober 2004 — 30 Oktober 2025</p>
+        <p className="intro">Untuk perempuan tercantik dalam hidupku. Semoga setiap langkahmu mewah oleh cinta, doa, dan keajaiban yang menghampiri tanpa henti.</p>
+        <div className="cta-row">
+          <a href="#gallery" className="btn primary">Lihat Kenangan</a>
+          <a href="#story" className="btn ghost">Baca Pesan</a>
+        </div>
+      </div>
+      <div className="hero-decor" aria-hidden />
+    </section>
+  );
+}
+
+function GallerySlider() {
+  const current = useAutoSlide(photos.length, 2600);
+  return (
+    <section id="gallery" className="gallery">
+      <h2>Kenangan Kita</h2>
+      <div className="slider">
+        {photos.map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt={`moment-${i + 1}`}
+            className={`slide${i === current ? ' active' : ''}`}
+          />
+        ))}
+        <div className="dots">
+          {photos.map((_, i) => (
+            <span key={i} className={`dot${i === current ? ' active' : ''}`} />)
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Story() {
+  return (
+    <section id="story" className="story">
+      <div className="card">
+        <h3>Untuk Kamu</h3>
+        <p>
+          Di usia ke-21, semoga hatimu selalu hangat, langkahmu ringan, 
+          dan mimpimu tumbuh jadi kenyataan satu per satu. Terima kasih 
+          sudah menjadi rumah terindah bagi hatiku.
+        </p>
+        <blockquote>
+          "Aku mencintaimu — hari ini, esok, dan selamanya."
+        </blockquote>
+      </div>
+      <div className="stats">
+        <div className="stat">
+          <div className="num">21</div>
+          <div className="label">Tahun Berharga</div>
+        </div>
+        <div className="stat">
+          <div className="num">∞</div>
+          <div className="label">Rasa Sayang</div>
+        </div>
+        <div className="stat">
+          <div className="num">2025</div>
+          <div className="label">Bab Baru</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Promises() {
+  const cards = [
+    { title: 'Menjaga & Mendengar', desc: 'Aku janji untuk selalu hadir, mendengar, dan memeluk setiap rasa.' },
+    { title: 'Bertumbuh Bersama', desc: 'Kita merawat mimpi, belajar dari hari-hari, dan melangkah berdua.' },
+    { title: 'Merayakan Hal Kecil', desc: 'Menjadikan momen sederhana terasa mewah dengan tawa dan syukur.' },
+    { title: 'Jujur & Saling Percaya', desc: 'Kejujuran jadi bahasa kita, percaya jadi rumahnya.' },
+    { title: 'Mencintai Setiap Versimu', desc: 'Bahagia, lelah, rapuh—semuanya berharga untuk kupeluk.' },
+  ];
+  return (
+    <section id="promises" className="promises">
+      <h2>Harapan & Janji</h2>
+      <p className="lead">Beberapa janji kecil untuk kita, agar cinta tetap hangat dan elegan.</p>
+      <div className="grid">
+        {cards.map((c, i) => (
+          <div key={i} className="card">
+            <div className="card-head">{c.title}</div>
+            <p>{c.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const App: React.FC = () => {
+  const [passed, setPassed] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const target = e.target as HTMLAnchorElement;
+      if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
+        e.preventDefault();
+        const id = target.getAttribute('href')!.slice(1);
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
+  if (!passed) {
+    return <QuizGate onPassed={() => setPassed(true)} />;
+  }
+
+  return (
+    <div className="site">
+      <Navbar />
+      <Hero />
+      <main>
+        <GallerySlider />
+        <Story />
+        <Promises />
+      </main>
+      <Footer />
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;600;700&display=swap');
+        :root {
+          --soft-red: ${softRed};
+          --deep-rose: ${deepRose};
+          --rose-50: #fff5f7;
+          --rose-100: #ffe3eb;
+          --rose-200: #ffd6de;
+          --rose-300: #ffb6c5;
+          --text: #642335;
+        }
+        * { box-sizing: border-box; }
+        html, body, #root { height: 100%; }
+        body { margin: 0; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; background: radial-gradient(1200px 600px at 20% -10%, #ffe8ef 0%, transparent 60%), radial-gradient(1000px 500px at 100% 0%, #ffeef3 0%, transparent 55%), linear-gradient(180deg, #fff, #fff0f5 60%, #fff);
+          color: var(--text);
+        }
+        .site { position: relative; overflow-x: hidden; }
+
+        /* Navbar */
+        .nav { position: sticky; top: 0; z-index: 20; backdrop-filter: saturate(140%) blur(8px); background: rgba(255,245,247,0.7); border-bottom: 1px solid var(--rose-100); }
+        .nav-inner { max-width: 1100px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .brand { font-family: 'Playfair Display', serif; font-weight: 700; letter-spacing: .5px; color: var(--deep-rose); }
+        .links a { color: #7b2333; text-decoration: none; margin-left: 18px; padding: 8px 12px; border-radius: 999px; transition: background .3s, color .3s; }
+        .links a:hover { background: var(--rose-100); color: var(--deep-rose); }
+
+        /* Hero */
+        .hero { position: relative; padding: 86px 20px 56px; display: grid; place-items: center; }
+        .hero-content { text-align: center; max-width: 760px; background: rgba(255,245,247,0.75); border: 1px solid var(--rose-100); border-radius: 24px; padding: 36px 26px; box-shadow: 0 30px 80px rgba(255, 179, 194, .35); }
+        .badge { display: inline-block; color: var(--deep-rose); background: #fff; border: 1px solid var(--rose-100); padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .6px; margin-bottom: 12px; }
+        .hero h1 { font-family: 'Playfair Display', serif; font-size: 48px; margin: 8px 0 8px; color: var(--deep-rose); text-shadow: 0 2px 0 #fff7fa; }
+        .subtitle { color: #8a2a3c; font-weight: 600; margin: 0 0 14px; }
+        .intro { font-size: 16px; line-height: 1.7; margin: 0 auto 18px; max-width: 600px; color: #6b2232; }
+        .cta-row { display: flex; gap: 12px; justify-content: center; }
+        .btn { border-radius: 12px; padding: 12px 16px; text-decoration: none; font-weight: 700; font-size: 14px; }
+        .btn.primary { background: linear-gradient(135deg, #ff9db2, #ff8ba7); color: white; box-shadow: 0 10px 30px rgba(255, 139, 167, .35); border: 1px solid #ff9db2; }
+        .btn.ghost { background: #fff; color: var(--deep-rose); border: 1px solid var(--rose-200); }
+
+        .hero-decor { position: absolute; inset: -120px -60px auto -60px; height: 340px; background: radial-gradient(400px 150px at 15% 25%, #ffe0e9, transparent 60%), radial-gradient(600px 180px at 85% 30%, #ffd6de, transparent 60%); z-index: -1; filter: blur(10px); opacity: .8; }
+
+        /* Gallery */
+        .gallery { padding: 36px 20px 12px; max-width: 1100px; margin: 0 auto; }
+        .gallery h2 { font-family: 'Playfair Display', serif; color: var(--deep-rose); font-size: 34px; margin: 0 0 18px 4px; }
+        .slider { position: relative; height: 380px; border-radius: 30px; overflow: hidden; border: 1px solid var(--rose-100); background: #fff; box-shadow: 0 16px 60px rgba(255, 179, 194, .35); }
+        .slide { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transform: scale(1.04); transition: opacity 1.2s cubic-bezier(.6,.04,.4,1), transform 1.8s cubic-bezier(.47,0,.745,.715); }
+        .slide.active { opacity: 1; transform: scale(1); }
+        .dots { position: absolute; left: 0; right: 0; bottom: 14px; display: flex; justify-content: center; gap: 8px; }
+        .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--rose-200); border: 2px solid #ff9db2; opacity: .5; transition: transform .3s, opacity .3s, background .3s; }
+        .dot.active { opacity: 1; background: #ff8ba7; transform: scale(1.1); }
+
+        /* Story */
+        .story { padding: 40px 20px; max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1.2fr .8fr; gap: 22px; }
+        .story .card { background: linear-gradient(180deg, #fff, #fff6f8); border: 1px solid var(--rose-100); border-radius: 22px; padding: 28px; box-shadow: 0 20px 60px rgba(255, 179, 194, .25); }
+        .story h3 { margin: 0 0 10px; font-family: 'Playfair Display', serif; color: var(--deep-rose); font-size: 26px; }
+        .story p { margin: 0; line-height: 1.8; color: #6b2232; }
+        blockquote { margin: 16px 0 0; padding-left: 16px; border-left: 3px solid var(--rose-300); color: #7b2333; font-style: italic; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat { background: #fff; border: 1px solid var(--rose-100); border-radius: 18px; padding: 16px; text-align: center; box-shadow: 0 10px 36px rgba(255, 179, 194, .2); }
+        .num { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--deep-rose); }
+        .label { color: #7b2333; font-size: 12px; letter-spacing: .6px; text-transform: uppercase; }
+
+        /* Promises */
+        .promises { padding: 20px 20px 56px; max-width: 1100px; margin: 0 auto; }
+        .promises h2 { font-family: 'Playfair Display', serif; color: var(--deep-rose); font-size: 34px; margin: 0 0 8px 4px; }
+        .promises .lead { margin: 0 0 18px 4px; color: #7b2333; }
+        .promises .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .promises .card { background: #fff; border: 1px solid var(--rose-100); border-radius: 18px; padding: 16px 18px; box-shadow: 0 16px 40px rgba(255, 179, 194, .22); transition: transform .25s ease, box-shadow .25s ease; }
+        .promises .card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(255, 179, 194, .28); }
+        .promises .card-head { font-weight: 700; color: #7b2333; margin-bottom: 6px; }
+        .promises p { margin: 0; color: #6b2232; line-height: 1.7; }
+
+        /* Footer */
+        .footer { padding: 26px 20px 36px; background: linear-gradient(180deg, #fff7fa, #fff); border-top: 1px solid var(--rose-100); }
+        .footer-inner { max-width: 1100px; margin: 0 auto; color: #7b2333; text-align: center; }
+        .small { color: #a33a53; font-size: 12px; margin-top: 6px; }
+
+        /* Responsive */
+        @media (max-width: 920px) {
+          .story { grid-template-columns: 1fr; }
+          .promises .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 560px) {
+          .hero h1 { font-size: 38px; }
+          .slider { height: 58vw; max-height: 420px; }
+          .promises .grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="footer-inner">
+        <div>Made with love • Soft Red • 30 Oktober 2025</div>
+        <div className="small">© Untuk kamu yang paling berharga.</div>
+      </div>
+    </footer>
+  );
+}
+
+export default App;
